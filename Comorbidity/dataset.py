@@ -5,7 +5,7 @@ sys.dont_write_bytecode = True
 sys.path.append('../Lib/')
 import utils, i2b2
 import numpy, pickle
-import ConfigParser, os, nltk, pandas
+import configparser, os, nltk, pandas
 import glob, string, collections, operator
 
 # can be used to turn this into a binary task
@@ -38,7 +38,7 @@ class DatasetProvider:
     # when training, make alphabet and pickle it
     # when testing, load it from pickle
     if use_pickled_alphabet:
-      print 'reading alphabet from', alphabet_pickle
+      print('reading alphabet from', alphabet_pickle)
       pkl = open(alphabet_pickle, 'rb')
       self.token2int = pickle.load(pkl)
     else:
@@ -64,6 +64,10 @@ class DatasetProvider:
         outfile.write('%s|%s\n' % (token, count))
         self.token2int[token] = index
         index = index + 1
+
+
+    print('Print alphabet')
+    print(self.token2int)
 
     # pickle alphabet
     pickle_file = open(self.alphabet_pickle, 'wb')
@@ -106,11 +110,12 @@ class DatasetProvider:
         labels.append(int_label)
         examples.append(example)
       else:
+        print('Label not in document')
         no_labels.append(doc_id)
 
-    print '%d documents with no labels for %s/%s in %s' \
+    print('%d documents with no labels for %s/%s in %s' \
       % (len(no_labels), self.disease,
-         self.judgement, self.annot_xml.split('/')[-1])
+         self.judgement, self.annot_xml.split('/')[-1]))
     return examples, labels
 
   def load_vectorized(self, exclude, maxlen=float('inf')):
@@ -151,9 +156,9 @@ class DatasetProvider:
       else:
         no_labels.append(doc_id)
 
-    print '%d documents with no labels for %s/%s in %s' \
+    print('%d documents with no labels for %s/%s in %s' \
       % (len(no_labels), self.disease,
-         self.judgement, self.annot_xml.split('/')[-1])
+         self.judgement, self.annot_xml.split('/')[-1]))
     return examples, labels
 
   def load_raw(self):
@@ -169,6 +174,9 @@ class DatasetProvider:
       self.disease,
       self.judgement)
 
+    print('Printing doc2label')
+    print(doc2label)
+
     for f in os.listdir(self.corpus_path):
       doc_id = f.split('.')[0]
       file_path = os.path.join(self.corpus_path, f)
@@ -183,14 +191,14 @@ class DatasetProvider:
       else:
         no_labels.append(doc_id)
 
-    print '%d documents with no labels for %s/%s in %s' \
+    print('%d documents with no labels for %s/%s in %s' \
       % (len(no_labels), self.disease,
-         self.judgement, self.annot_xml.split('/')[-1])
+         self.judgement, self.annot_xml.split('/')[-1]))
     return examples, labels
 
 if __name__ == "__main__":
 
-  cfg = ConfigParser.ConfigParser()
+  cfg = configparser.ConfigParser()
   cfg.read(sys.argv[1])
   base = os.environ['DATA_ROOT']
   data_dir = os.path.join(base, cfg.get('data', 'train_data'))
@@ -199,5 +207,6 @@ if __name__ == "__main__":
   dataset = DatasetProvider(data_dir, annot_xml)
   exclude = set(['GERD', 'Venous Insufficiency', 'CHF'])
   x, y = dataset.load_vectorized(exclude)
-  print x
-  print y
+  print(x)
+  print(y)
+
