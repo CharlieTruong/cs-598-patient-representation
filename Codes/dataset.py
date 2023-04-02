@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import numpy
-import ConfigParser, os, nltk, pandas, sys
+import configparser, os, nltk, pandas, sys
 sys.dont_write_bytecode = True
 import glob, string, collections, operator, pickle
 
@@ -11,6 +11,7 @@ CODE_FREQ_FILE = 'Model/codes.txt'
 DIAG_ICD9_FILE = 'DIAGNOSES_ICD.csv'
 PROC_ICD9_FILE = 'PROCEDURES_ICD.csv'
 CPT_CODE_FILE = 'CPTEVENTS.csv'
+
 
 class DatasetProvider:
   """THYME relation data"""
@@ -23,6 +24,8 @@ class DatasetProvider:
                min_examples_per_code,
                use_cuis=True):
     """Index words by frequency in a file"""
+
+    print('Corpus path', corpus_path)
 
     self.corpus_path = corpus_path
     self.code_dir = code_dir
@@ -37,11 +40,11 @@ class DatasetProvider:
 
     # making token alphabet is expensive so do it once
     if not os.path.isfile(ALPHABET_PICKLE):
-      print 'making alphabet and dumping it to file...'
+      print('making alphabet and dumping it to file...')
       self.make_and_write_token_alphabet()
-    print 'retrieving alphabet from file...'
+    print('retrieving alphabet from file...')
     self.token2int = pickle.load(open(ALPHABET_PICKLE, 'rb'))
-    print 'mapping codes...'
+    print('mapping codes...')
     diag_code_file = os.path.join(self.code_dir, DIAG_ICD9_FILE)
     proc_code_file = os.path.join(self.code_dir, PROC_ICD9_FILE)
     cpt_code_file = os.path.join(self.code_dir, CPT_CODE_FILE)
@@ -77,12 +80,14 @@ class DatasetProvider:
 
     return tokens
 
+
   def make_and_write_token_alphabet(self):
     """Write unique corpus tokens to file"""
 
     # count tokens in the entire corpus
     token_counts = collections.Counter()
     for file in os.listdir(self.corpus_path):
+      print(file)
       file_ngram_list = None
       if self.use_cuis:
         file_ngram_list = self.read_cuis(file)
@@ -91,6 +96,8 @@ class DatasetProvider:
       if file_ngram_list == None:
         continue
       token_counts.update(file_ngram_list)
+      print('Printing Token Counts')
+      print(token_counts)
 
     # now make alphabet
     # and save it in a file for debugging
@@ -98,11 +105,16 @@ class DatasetProvider:
     self.token2int['oov_word'] = 0
     outfile = open(ALPHABET_FILE, 'w')
     for token, count in token_counts.most_common():
+      print('Printing Alphabet Token Counts')
+      print(token)
+      print(count)
       outfile.write('%s|%s\n' % (token, count))
       if count > self.min_token_freq:
         self.token2int[token] = index
         index = index + 1
 
+    print("Print Token2Int")
+    print(self.token2int)
     # pickle alphabet
     pickle_file = open(ALPHABET_PICKLE, 'wb')
     pickle.dump(self.token2int, pickle_file)
@@ -148,19 +160,31 @@ class DatasetProvider:
     codes = []    # each example has multiple codes
     examples = [] # int sequence represents each example
 
+    print('Print Code2Int')
+    print(self.code2int)
+    print('Print Subj2Code')
+    print(self.subj2codes)
+    print('Token2Int')
+    print(self.token2int)
+
     for file in os.listdir(self.corpus_path):
       file_ngram_list = None
       if self.use_cuis == True:
+        print('Reading Cuis')
         file_ngram_list = self.read_cuis(file)
       else:
+        print('Reading Tokens')
         file_ngram_list = self.read_tokens(file)
       if file_ngram_list == None:
+        print('File too long')
         continue # file too long
 
       # make code vector for this example
       subj_id = int(file.split('.')[0])
+      print('Printing SUBJECT_ID')
+      print(subj_id)
       if len(self.subj2codes[subj_id]) == 0:
-        print 'skipping file:', file
+        print('skipping file:', file)
         continue # no codes for this file
 
       code_vec = [0] * len(self.code2int)
@@ -190,6 +214,10 @@ class DatasetProvider:
         example = example[0:maxlen]
 
       examples.append(example)
+
+      print('Printing outputs')
+      print(code_vec)
+      print(example)
 
     return examples, codes
 
