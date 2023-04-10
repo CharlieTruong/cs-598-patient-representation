@@ -1,0 +1,8 @@
+keras==2.10.0
+lxml==4.9.2
+medcat==1.7.0
+pandas==1.5.3
+nltk==3.8.1
+numpy==1.24.2
+scikit-learn==1.2.2
+tensorflow==2.10.1
