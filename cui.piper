@@ -1,0 +1,33 @@
+//       ***  Piper File  ***
+//       Created by charlietruong
+//       on April 06, 2023
+
+
+//  Files in Dir Reader
+//  Reads document texts from text files in a directory.
+reader FileTreeReader InputDirectory=/home/ec2-user/SageMaker/cs-598-patient-representation/MimicIII/Patients/Notes
+
+
+//  CCDA Sectionizer
+//  Annotates Document Sections by detecting Section Headers using Regular Expressions provided in a File.
+add org.apache.ctakes.core.ae.CDASegmentAnnotator
+
+
+//  Sentence Detector
+//  Annotates Sentences based upon an OpenNLP model.
+add org.apache.ctakes.core.ae.SentenceDetector
+
+
+//  PTB Tokenizer
+//  Annotates Document Penn TreeBank Tokens.
+add org.apache.ctakes.core.ae.TokenizerAnnotatorPTB
+
+
+//  Dictionary Lookup (Default)
+//  Annotates clinically-relevant terms.  Terms must match dictionary entries exactly.
+add org.apache.ctakes.dictionary.lookup2.ae.DefaultJCasTermAnnotator
+
+
+//  CUI Count Writer
+//  Writes a two-column BSV file containing CUIs and their total counts in a document.
+add org.apache.ctakes.core.cc.CuiCountFileWriter OutputDirectory=/home/ec2-user/SageMaker/ctakes-results/MimicIII/Patients/ctake-xml
