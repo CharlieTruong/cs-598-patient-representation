@@ -128,3 +128,9 @@ dmypy.json
 .pyre/
 
 .DS_Store
+
+# Data directories
+MimicIII/
+Comorbidity/Cuis
+Comorbidity/Notes
+Comorbidity/Xml
