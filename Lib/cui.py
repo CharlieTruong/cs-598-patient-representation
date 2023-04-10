@@ -76,12 +76,12 @@ def extract_patient_group_cuis(input_files: List[str], output_dir):
         output_dir: The output directory
     """
     vocab = Vocab.load(MEDCAT_VOCAB_PATH)
-    cdb = CDB.load(MEDCAT_CDB_PATH, config_dict={"general": {"spacy_model": MEDCAT_SPACY_MODEL_PATH}})
+    cdb = CDB.load(MEDCAT_CDB_PATH, config_dict={"general": {"spacy_model": MEDCAT_SPACY_MODEL_PATH, "spell_check": False, "workers": 1}})
     mc_status = MetaCAT.load(MEDCAT_STATUS_PATH)
-    cat = CAT(cdb=cdb, config=cdb.config, vocab=vocab, meta_cats=[mc_status])
+    MEDCAT = CAT(cdb=cdb, config=cdb.config, vocab=vocab, meta_cats=[mc_status])
     for input_file in input_files:
         with open(input_file) as f:
-            entities = cat.get_entities(f.read())["entities"]
+            entities = MEDCAT.get_entities(f.read())["entities"]
             cuis = " ".join(e['cui'] for e in entities.values())
             filename = os.path.basename(input_file)
             with open(f"{output_dir}/{filename}", "w") as f:
@@ -97,7 +97,10 @@ def extract_all_patient_cuis(input_dir: str, output_dir: str, max_workers: Optio
         max_workers: The max number of workers to use to extract the CUIs
 
     """
-    input_files = [f"{input_dir}/{f}" for f in os.listdir(input_dir) if f.endswith(".txt")]
+    input_files = [
+        f"{input_dir}/{f}" for f in os.listdir(input_dir)
+        if f.endswith(".txt") and not os.path.exists(f"{output_dir}/{f}")
+    ]
     input_file_chunks = np.array_split(input_files, max_workers)
     with ProcessPoolExecutor(max_workers=max_workers) as e:
         futures = [e.submit(extract_patient_group_cuis, chunk, output_dir) for chunk in input_file_chunks]
@@ -107,12 +110,33 @@ def extract_all_patient_cuis(input_dir: str, output_dir: str, max_workers: Optio
             future.result()
 
 
+def parse_ctakes_cuis(input_dir: str, output_dir: str):
+    """Parse files from ctakes and output to another directory
+
+    Args:
+        input_dir: The directory containing the ctakes output. There will be a file per patient,
+            and the file is a pipe delimited file of CUI counts
+        output_dir: The directory where to save the parsed file. This will be a file per patient
+            with the CUIs separated by a space
+    """
+    for f in os.listdir(input_dir):
+        df = pd.read_csv(f"{input_dir}/{f}", sep="|", header=None, names=["cui", "count"])
+        df["cui_extended"] = ((df["cui"] + " ") * df["count"]).str.strip()
+        output_filename = f"{f.split('.')[0]}.txt"
+        with open(f"{output_dir}/{output_filename}", "w") as f:
+            try:
+                f.write(" ".join(df["cui_extended"]))
+            except Exception:
+                breakpoint()
+
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract CUIs from patient notes")
     parser.add_argument(
         "command",
         help="The command to execute",
-        choices=["extract_notes", "extract_cuis"],
+        choices=["extract_notes", "extract_cuis", "parse_ctakes_cuis"],
         type=str
     )
     parser.add_argument(
@@ -159,3 +183,5 @@ if __name__ == "__main__":
         save_notes_by_patient(notes_df, args.output_dir)
     elif args.command == "extract_cuis":
         extract_all_patient_cuis(args.text_input_dir, args.output_dir, max_workers=args.max_workers)
+    elif args.command == "parse_ctakes_cuis":
+        parse_ctakes_cuis(args.text_input_dir, args.output_dir)
