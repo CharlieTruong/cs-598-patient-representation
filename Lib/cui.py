@@ -1,7 +1,11 @@
 """Process patient clinical notes to Concept Unique Identifiers (CUI)"""
 import argparse
 import os
+import re
+import sys
+import time
 from concurrent.futures import as_completed, ProcessPoolExecutor
+from random import randrange
 from typing import List, Optional
 
 import numpy as np
@@ -16,6 +20,24 @@ MEDCAT_CDB_PATH = os.path.abspath("Lib/med_cat_model/cdb.dat")
 MEDCAT_SPACY_MODEL_PATH = os.path.abspath("Lib/med_cat_model/spacy_model")
 MEDCAT_VOCAB_PATH = os.path.abspath("Lib/med_cat_model/vocab.dat")
 MEDCAT_STATUS_PATH = os.path.abspath("Lib/med_cat_model/meta_Status")
+
+
+illegal_unichrs = [(0x00, 0x08), (0x0B, 0x0C), (0x0E, 0x1F),
+                   (0x7F, 0x84), (0x86, 0x9F),
+                   (0xFDD0, 0xFDDF), (0xFFFE, 0xFFFF)]
+if sys.maxunicode >= 0x10000:  # not narrow build
+    illegal_unichrs.extend([(0x1FFFE, 0x1FFFF), (0x2FFFE, 0x2FFFF),
+                            (0x3FFFE, 0x3FFFF), (0x4FFFE, 0x4FFFF),
+                            (0x5FFFE, 0x5FFFF), (0x6FFFE, 0x6FFFF),
+                            (0x7FFFE, 0x7FFFF), (0x8FFFE, 0x8FFFF),
+                            (0x9FFFE, 0x9FFFF), (0xAFFFE, 0xAFFFF),
+                            (0xBFFFE, 0xBFFFF), (0xCFFFE, 0xCFFFF),
+                            (0xDFFFE, 0xDFFFF), (0xEFFFE, 0xEFFFF),
+                            (0xFFFFE, 0xFFFFF), (0x10FFFE, 0x10FFFF)])
+
+illegal_ranges = [fr'{chr(low)}-{chr(high)}' for (low, high) in illegal_unichrs]
+xml_illegal_character_regex = '[' + ''.join(illegal_ranges) + ']'
+illegal_xml_chars_re = re.compile(xml_illegal_character_regex)
 
 
 def parse_mimic_iii_notes(notes_file: str, limit: Optional[int] = None) -> pd.DataFrame:
@@ -63,7 +85,7 @@ def save_notes_by_patient(notes_df: pd.DataFrame, output_dir: str):
     """
     for _, row in notes_df.iterrows():
         with open(f"{output_dir}/{row['subject_id']}.txt", "w") as f:
-            f.write(row["text"])
+            f.write(illegal_xml_chars_re.sub("", row["text"]))
 
 
 def extract_patient_group_cuis(input_files: List[str], output_dir):
