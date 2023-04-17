@@ -27,7 +27,7 @@ add org.apache.ctakes.core.ae.TokenizerAnnotatorPTB
 //  Annotates clinically-relevant terms.  Terms must match dictionary entries exactly.
 add org.apache.ctakes.dictionary.lookup2.ae.DefaultJCasTermAnnotator
 
-
-//  CUI Count Writer
-//  Writes a two-column BSV file containing CUIs and their total counts in a document.
-add org.apache.ctakes.core.cc.CuiCountFileWriter OutputDirectory=/home/ec2-user/SageMaker/ctakes-results/MimicIII/Patients/ctake-xml
+//  XMI Writer
+//  Writes XMI files with full representation of input text and all extracted information.
+#   OutputDirectory  Output directory to write xmi files
+add org.apache.ctakes.core.cc.XmiWriterCasConsumerCtakes OutputDirectory=/home/ec2-user/SageMaker/ctakes-results/MimicIII/Patients/ctake-xmi

@@ -146,7 +146,14 @@ def parse_ctakes_cuis(input_dir: str, output_dir: str):
         output_filename = f"{f.split('.')[0]}.txt"
         soup = bs4.BeautifulSoup(input_file_path, features="xml")
         with open(f"{output_dir}/{output_filename}", "w") as f:
-            f.write(" ".join(tag.get("cui") for tag in soup.find_all("refsem:UmlsConcept"))) 
+            f.write(" ".join(tag.get("cui") for tag in soup.find_all("refsem:UmlsConcept")))
+
+
+def create_cui_2_vec(input_dir: str, output_dir: str, max_workers: Optional[int] = 1):
+    """Train a Word2Vec model using CUIs and save to a directory
+
+    
+    """
 
 
 
@@ -204,3 +211,5 @@ if __name__ == "__main__":
         extract_all_patient_cuis(args.text_input_dir, args.output_dir, max_workers=args.max_workers)
     elif args.command == "parse_ctakes_cuis":
         parse_ctakes_cuis(args.text_input_dir, args.output_dir)
+    elif args.command == "create_cui_2_vec":
+        create_cui_2_vec(args.text_input_dir, args.output_dir, max_workers=args.max_workers)
