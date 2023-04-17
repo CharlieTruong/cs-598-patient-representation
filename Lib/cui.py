@@ -8,6 +8,7 @@ from concurrent.futures import as_completed, ProcessPoolExecutor
 from random import randrange
 from typing import List, Optional
 
+import bs4
 import numpy as np
 import pandas as pd
 from medcat.cat import CAT
@@ -136,20 +137,16 @@ def parse_ctakes_cuis(input_dir: str, output_dir: str):
     """Parse files from ctakes and output to another directory
 
     Args:
-        input_dir: The directory containing the ctakes output. There will be a file per patient,
-            and the file is a pipe delimited file of CUI counts
+        input_dir: The directory containing the ctakes xml output. There will be a file per patient.
         output_dir: The directory where to save the parsed file. This will be a file per patient
             with the CUIs separated by a space
     """
     for f in os.listdir(input_dir):
-        df = pd.read_csv(f"{input_dir}/{f}", sep="|", header=None, names=["cui", "count"])
-        df["cui_extended"] = ((df["cui"] + " ") * df["count"]).str.strip()
+        input_file_path = f"{input_dir}/{f}"
         output_filename = f"{f.split('.')[0]}.txt"
+        soup = bs4.BeautifulSoup(input_file_path, features="xml")
         with open(f"{output_dir}/{output_filename}", "w") as f:
-            try:
-                f.write(" ".join(df["cui_extended"]))
-            except Exception:
-                breakpoint()
+            f.write(" ".join(tag.get("cui") for tag in soup.find_all("refsem:UmlsConcept"))) 
 
 
 
