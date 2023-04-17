@@ -12,6 +12,7 @@ from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.model_selection import train_test_split
 import keras as k
+from gensim.models import KeyedVectors
 from keras.utils.np_utils import to_categorical
 from keras.optimizers import RMSprop
 from keras.utils import pad_sequences
@@ -22,7 +23,6 @@ from tensorflow.keras.layers import Embedding
 from keras.models import load_model
 import tensorflow as tf
 import dataset
-#import word2vec
 
 # ignore sklearn warnings
 def warn(*args, **kwargs):
@@ -92,10 +92,10 @@ if __name__ == "__main__":
   maxlen = max([len(seq) for seq in train_x])
 
   init_vectors = None
-  #if cfg.has_option('data', 'embed'):
-    #embed_file = os.path.join(base, cfg.get('data', 'embed'))
-    #w2v = word2vec.Model(embed_file)
-    #init_vectors = [w2v.select_vectors(dataset.token2int)]
+  if cfg.has_option('data', 'embed'):
+    embed_file = os.path.join(base, cfg.get('data', 'embed'))
+    w2v = KeyedVectors.load(embed_file)
+    init_vectors = w2v[dataset.token2int]
 
   # turn x into numpy array among other things
   classes = len(dataset.code2int)

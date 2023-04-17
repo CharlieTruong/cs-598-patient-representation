@@ -11,6 +11,7 @@ from typing import List, Optional
 import bs4
 import numpy as np
 import pandas as pd
+from gensim.models import Word2Vec
 from medcat.cat import CAT
 from medcat.cdb import CDB
 from medcat.meta_cat import MetaCAT
@@ -152,8 +153,18 @@ def parse_ctakes_cuis(input_dir: str, output_dir: str):
 def create_cui_2_vec(input_dir: str, output_dir: str, max_workers: Optional[int] = 1):
     """Train a Word2Vec model using CUIs and save to a directory
 
-    
+    Args:
+        input_dir: The directory containing the extracted CUIs
+        output_dir: The directory where to save the word embeddings
+        max_workers: The number of workers to use
     """
+    sentences = []
+    for f in os.listdir(input_dir):
+        with open(f"{input_dir}/{f}") as f:
+            sentences.append(f.read().split(" "))
+
+    model = Word2Vec(sentences, vector_size=300, window=5, workers=max_workers)
+    model.wv.save(f"{output_dir}/mimic-cuis.kv")
 
 
 
@@ -162,7 +173,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "command",
         help="The command to execute",
-        choices=["extract_notes", "extract_cuis", "parse_ctakes_cuis"],
+        choices=["extract_notes", "extract_cuis", "parse_ctakes_cuis", "create_cui_2_vec"],
         type=str
     )
     parser.add_argument(
