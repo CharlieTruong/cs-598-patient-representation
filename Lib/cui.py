@@ -145,7 +145,9 @@ def parse_ctakes_cuis(input_dir: str, output_dir: str):
     for f in os.listdir(input_dir):
         input_file_path = f"{input_dir}/{f}"
         output_filename = f"{f.split('.')[0]}.txt"
-        soup = bs4.BeautifulSoup(input_file_path, features="xml")
+        with open(input_file_path) as f:
+            soup = bs4.BeautifulSoup(f.read(), features="xml")
+
         with open(f"{output_dir}/{output_filename}", "w") as f:
             f.write(" ".join(tag.get("cui") for tag in soup.find_all("refsem:UmlsConcept")))
 
