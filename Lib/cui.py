@@ -124,10 +124,7 @@ def parse_ctakes_cuis(input_dir: str, output_dir: str):
         df["cui_extended"] = ((df["cui"] + " ") * df["count"]).str.strip()
         output_filename = f"{f.split('.')[0]}.txt"
         with open(f"{output_dir}/{output_filename}", "w") as f:
-            try:
-                f.write(" ".join(df["cui_extended"]))
-            except Exception:
-                breakpoint()
+            f.write(" ".join(df["cui_extended"]))
 
 
 
