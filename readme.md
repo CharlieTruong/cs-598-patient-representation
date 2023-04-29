@@ -9,6 +9,26 @@ This project aims to replicate the results from the paper to better understand i
 * Nabeel Mamoon (nmamoon2)
 * Charlie Truong (ctruong4)
 
+## Data Download
+
+Here is the data used in this project:
+
+* MIMIC-III - De-identified health data for ~40K patients available on [Physionet](https://physionet.org/content/mimiciii/1.4/). In order to access the data, you must first apply to be a [credentialed user](https://physionet.org/login/?next=/settings/credentialing/). Here is the data you need to download:
+
+    * [CPTEVENTS.csv](https://physionet.org/content/mimiciii/1.4/CPTEVENTS.csv.gz)
+    * [DIAGNOSES_ICD.csv](https://physionet.org/content/mimiciii/1.4/DIAGNOSES_ICD.csv.gz)
+    * [NOTEEVENTS.csv](https://physionet.org/content/mimiciii/1.4/NOTEEVENTS.csv.gz)
+    * [PROCEDURES_ICD.csv](https://physionet.org/content/mimiciii/1.4/PROCEDURES_ICD.csv.gz)
+
+* I2B2 - Obesity and comorbidity data available from the [Harvard Medical School data portal](https://portal.dbmi.hms.harvard.edu/projects/n2c2-nlp/). You must first [register and apply](https://authentication.dbmi.hms.harvard.edu/login/auth?next=https%3A%2F%2Fportal.dbmi.hms.harvard.edu%2Fprojects%2Fn2c2-nlp%2F&client_id=Tj70ogd2WbrQzGB5ndjCTlyCz3pOiWuP&branding=eyJ0aXRsZSI6ICJEQk1JIFBvcnRhbCIsICJpY29uX3VybCI6ICJodHRwczovL2F1dGhlbnRpY2F0aW9uLmRibWkuaG1zLmhhcnZhcmQuZWR1L3N0YXRpYy9obXNfbG9nby5zdmciLCAiY29sb3IiOiAiI2JjMjYyYiJ9&project=hypatio&email_confirm_success_url=https%3A%2F%2Fportal.dbmi.hms.harvard.edu%2Fprojects%2Fn2c2-nlp%2F) to access it. Here is the data you will want to download:
+
+    * [Training Data: Obesity Training Records (XML)](https://portal.dbmi.hms.harvard.edu/projects/download_dataset/?file_uuid=36e8fae8-d2d8-44cf-8e40-b0897eaed5d6)
+    * [Training Data: The second set of Obesity Training Records (XML)](https://portal.dbmi.hms.harvard.edu/projects/download_dataset/?file_uuid=a527531c-050b-49bc-8fe1-69e199621f37)
+    * [Training Data: Annotations for Training Records (XML)](https://portal.dbmi.hms.harvard.edu/projects/download_dataset/?file_uuid=a527531c-050b-49bc-8fe1-69e199621f37)
+    * [Training Data: Annotations for the second set of Obesity Training Records (XML)](https://portal.dbmi.hms.harvard.edu/projects/download_dataset/?file_uuid=bdb210a5-a23a-43c0-b182-78ad8727a76a)
+    * [Test Data: Test Records (XML)](https://portal.dbmi.hms.harvard.edu/projects/download_dataset/?file_uuid=20ee8a6e-1a4d-471b-a87b-2c37855facb9)
+    * [Test Data: Ground Truth for Intuitive Judgments on Test Data](https://portal.dbmi.hms.harvard.edu/projects/download_dataset/?file_uuid=06b60087-f923-4d33-b53c-86ab7f3b3014)
+
 ## Data Directories
 
 If running code in this repo for the first time, the following directories will need to be added to the repo:
@@ -19,7 +39,7 @@ If running code in this repo for the first time, the following directories will 
 * Comorbidity/Notes/Test - This will contain the raw text test data per patient from the I2B2 dataset
 * Comorbidity/Notes/Train1+2 - This will contain the raw text training data per patient from the I2B2 dataset
 * Comorbidity/Model - This will contain the metadata from training the SVM model with a sparse representation of the codes
-* Comorbidity/Xml - This contains the raw XML data from the I2B2 dataset:
+* Comorbidity/Xml - This contains the *raw XML data from the I2B2 dataset*:
     * obesity_patient_records_test.xml
     * obesity_patient_records_training.xml
     * obesity_patient_records_training2.xml
@@ -28,7 +48,7 @@ If running code in this repo for the first time, the following directories will 
     * obesity_standoff_annotations_training.xml
 * MimicIII/Patients/Cuis - This will contain the extracted CUI data from the raw text
 * MimicIII/Patients/Notes - This will contain the raw text data per patient
-* MimicIII/Source - This should contain raw data from MIMIC-III: CPTEVENTS.csv, DIAGNOSES_ICD.csv, NOTEEVENTS.csv, PROCEDURES_CID.csv
+* MimicIII/Source - This should contain *raw data from MIMIC-III*: CPTEVENTS.csv, DIAGNOSES_ICD.csv, NOTEEVENTS.csv, PROCEDURES_ICD.csv
 
 ## CUI Extraction
 
@@ -61,29 +81,51 @@ Before receiving our UMLS license, we attempted to use the [Medcat package](http
     * `--output_dir` - The directory where the extracted CUIs should be exported such as `"MimicIII/Patients/Cuis`
     * `--max_workers` - The extraction process can be slow so this allows running the extraction with multiprocessing. The default value is 1.
 
-The notes must be extracted first via `extract_notes` and then `extract_cuis` can be used. This all assumes that the following data exists:
-
-* `MimicIII/Source/NOTEEVENTS.csv` - This is the aggregated clinical notes from the [MIMIC III dataset](https://physionet.org/content/mimiciii/1.4/)
-* `Comorbidity/Xml/obesity_patient_records_training.xml` - Part 1 of the training data from the [I2B2 obesity dataset](https://portal.dbmi.hms.harvard.edu/projects/n2c2-nlp/)
-* `Comorbidity/Xml/obesity_patient_records_training2.xml` - Part 2 of the training data from the I2B2 obesity dataset
-* `Comorbidity/Xml/obesity_patient_records_test.xml` - The test data from the I2B2 obesity dataset
-
 ## Training Models
 
 To train the CUI model, navigate to the `Codes` directory and run this command:
 
 ```
-python ft.py cuis.cfg
+DATA_ROOT=../ python ft.py cuis.cfg
 ```
 
 Then to train the SVM model with a sparse representation, navigate to the `Comorbidity` directory and run this command:
 
 ```
-python svm.py sparse.cfg
+DATA_ROOT=../ python svm.py sparse.cfg
 ```
 
 Then to train the SVM model with the CUI embedding, navigate to the `Comorbidity` directory and run this command:
 
 ```
-python svm.py dense.cfg
+DATA_ROOT=../ python svm.py dense.cfg
 ```
+
+## Results
+
+Here are our results with how they compare to the original paper. The "SVM w/ Sparse Rep" refers to the SVM model used to predict comorbidity in the I2B2 dataset when using a spare representation of the CUI data. Whereas, "SVM w/ Dense Rep" refers to the SVM model using the CUI embeddings from the neural network.
+
+|                                   | Original    | Our Project|
+| --------------------------------- | ----------- | -----------|
+| SVM w/ Sparse Rep - F1 Score      | 0.672       | 0.659      |
+| SVM w/ Dense  Rep - F1 Score      | 0.715       | 0.678      |
+
+Here are our project results comparing the SVM with Sparse vs the Dense representation by disease in the I2B2 dataset.
+
+ |Disease | SVM - Sparse F1 | SVM -Dense F1 |
+ |--------| ---------- | --------- |
+ |Asthma | 0.808 | 0.925 |
+ |CAD | 0.584 | 0.592 |
+ |CHF | 0.361 |  0.541 |
+ |Depression | 0.716 |  0.746 |
+ |Diabetes | 0.853 |  0.585 |
+ |GERD | 0.475 |  0.550 |
+ |Gallstones | 0.643 |  0.624 |
+ |Gout | 0.864 |  0.877 |
+ |Hyperchloesterolemia | 0.782 |  0.853 |
+ |Hypertension | 0.663 |  0.826 |
+ |Hypertriglyceridemia | 0.756 |  0.586 |
+ |OA | 0.451 |  0.488 |
+ |OSA | 0.540 |  0.606 |
+ |Obesity | 0.788 |  0.840 |
+ |PVD | 0.558 |  0.561 |
